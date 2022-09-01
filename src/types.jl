@@ -119,7 +119,10 @@ end
 unescape(b::Vector{UInt8}) = Vector{UInt8}(unescape(StringView(b)))
 escape(b::Vector{UInt8}) = Vector{UInt8}(escape(StringView(b)))
 
-parse(::Type{String}, bytes::Vector{UInt8}) = unescape(bytes)
+parse(::Type{String}, bytes::Vector{UInt8}) = unescape(StringView(bytes))
 unparse(val::String) = escape(Vector{UInt8}(val))
+
+parse(::Type{Vector{UInt8}}, bytes::Vector{UInt8}) = unescape(bytes)
+unparse(val::Vector{UInt8}) = escape(val)
 
 export KatcpAddress

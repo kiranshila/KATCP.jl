@@ -70,6 +70,16 @@ end
                 @test addr == KATCP.parse(KatcpAddress, KATCP.unparse(addr))
             end
         end
+        @testset "String" begin
+            for s in ["foo", "foo bar baz", "\\@", "\eA\\_crazy\tstring\nwith\0lots\\of\rthings"]
+                roundtrip_type(s)
+            end
+        end
+        @testset "Arbitrary data" begin
+            for data in eachcol(rand(UInt8, 100, 100))
+                roundtrip_type(Vector(data))
+            end
+        end
     end
     @testset "Round trip concrete message types" begin
         raw = RawMessage(KATCP.Reply, "foo", BareReply(KATCP.Ok)) |> Vector{UInt8}
