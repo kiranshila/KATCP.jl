@@ -125,4 +125,9 @@ unparse(val::String) = escape(Vector{UInt8}(val))
 parse(::Type{Vector{UInt8}}, bytes::Vector{UInt8}) = unescape(bytes)
 unparse(val::Vector{UInt8}) = escape(val)
 
+##### Maybe
+# This will only work is the optional value is the last field or fields, otherwise you need to write a parser
+parse(::Type{Maybe{T}}, bytes::Vector{UInt8}) where {T} = isempty(bytes) ? nothing : parse(T, bytes)
+unparse(::Nothing) = UInt8[]
+
 export KatcpAddress

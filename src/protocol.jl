@@ -8,7 +8,7 @@ The core message type of KATCP.
 struct RawMessage
     kind::MessageKind
     name::String
-    id::Union{UInt32,Nothing}
+    id::Maybe{UInt32}
     arguments::Vector{Vector{UInt8}}
 end
 

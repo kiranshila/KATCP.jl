@@ -7,6 +7,10 @@ function roundtrip_type(a::T) where {T}
     @test a == KATCP.parse(T, KATCP.unparse(a))
 end
 
+function roundtrip_msg(a::T) where {T}
+    @test a == KATCP.read(T, Vector{UInt8}(RawMessage(a)))
+end
+
 @testset "KATCP.jl" begin
     @testset "Round trip protocol" begin
         for kind in [KATCP.Request, KATCP.Inform, KATCP.Reply],
@@ -80,9 +84,24 @@ end
                 roundtrip_type(Vector(data))
             end
         end
+        @testset "Maybe" begin
+            @test "Foo" == KATCP.parse(KATCP.Maybe{String}, KATCP.unparse("Foo"))
+            @test nothing === KATCP.parse(KATCP.Maybe{String}, KATCP.unparse(nothing))
+        end
     end
-    @testset "Round trip concrete message types" begin
-        raw = RawMessage(KATCP.Reply, "foo", BareReply(KATCP.Ok)) |> Vector{UInt8}
-        @test KATCP.read(BareReply, raw) === BareReply(KATCP.Ok)
+    @testset "Roundtrip messages" begin
+        @testset "Halt" begin
+            roundtrip_msg(HaltRequest())
+            for code in [KATCP.Ok, KATCP.Invalid, KATCP.Fail]
+                roundtrip_msg(HaltReply(code))
+            end
+        end
+        @testset "Help" begin
+            for name in [nothing, "a-command-name"]
+                roundtrip_msg(HelpRequest(name))
+            end
+            roundtrip_msg(HelpInform("a-command-name", raw"This is how this command works"))
+            roundtrip_msg(HelpReply(KATCP.Ok, 123))
+        end
     end
 end
