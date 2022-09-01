@@ -49,6 +49,12 @@ using Sockets
                 KATCP.parse(DateTime, Vector{UInt8}(dt))
             end
         end
+        @testset "Enums" begin
+            @enum Foo Bar Baz Buzz
+            for variant in [Bar, Baz, Buzz]
+                @test variant == KATCP.parse(Foo, Vector{UInt8}(variant))
+            end
+        end
         @testset "KatcpAddress" begin
             for host in [ip"192.168.4.10", ip"::1", ip"2001:0db8:85a3:0000:0000:8a2e:0370:7334"],
                 port in [UInt16(8080), nothing]

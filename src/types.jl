@@ -13,36 +13,12 @@ parse(t::Type, bytes::Base.CodeUnits) = parse(t, collect(bytes))
 
 @enum RetCode Ok Invalid Fail
 
-function parse(::Type{RetCode}, bytes::Vector{UInt8})
-    if bytes == b"ok"
-        Ok
-    elseif bytes == b"invalid"
-        Invalid
-    elseif bytes == b"fail"
-        Fail
-    else
-        error("Failed to parse a `RetCode` at input \"$(String(bytes))\"")
-    end
-end
-
-function Vector{UInt8}(val::RetCode)
-    # Exhaustive because enum
-    Vector{UInt8}(if val == Ok
-        "ok"
-    elseif val == Invalid
-        "invalid"
-    else
-        "fail"
-    end
-    )
-end
-
 ##### KATCP "Primitive" Types
 
-parse(::Type{Int32}, bytes::Vector{UInt8}) = Base.parse(Int32, String(bytes))
+parse(::Type{Int32}, bytes::Vector{UInt8}) = Base.parse(Int32, StringView(bytes))
 Vector{UInt8}(val::Int32) = Vector{UInt8}(string(val))
 
-parse(::Type{Float32}, bytes::Vector{UInt8}) = Base.parse(Float32, String(bytes))
+parse(::Type{Float32}, bytes::Vector{UInt8}) = Base.parse(Float32, StringView(bytes))
 Vector{UInt8}(val::Float32) = Vector{UInt8}(string(val))
 
 parse(::Type{Bool}, bytes::Vector{UInt8}) = bytes[1] == UInt8('1')
@@ -52,6 +28,20 @@ parse(::Type{DateTime}, bytes::Vector{UInt8}) = unix2datetime(parse(Float32, byt
 Vector{UInt8}(val::DateTime) = Vector{UInt8}(string(datetime2unix(val)))
 
 ##### KATCP "Complex" Types
+
+# There is probably a smarter way to do this with a hashing, 
+# but the number of variants is going to be small, so I'm not sure it matters
+function parse(::Type{T}, bytes::Vector{UInt8}) where {T<:Enum}
+    sv = StringView(bytes)
+    for kind in instances(T)
+        if sv == lowercase(string(kind))
+            return kind
+        end
+    end
+    error("Discrete variant in payload, $sv, doesn't match a variant in $T")
+end
+
+Vector{UInt8}(val::Enum) = Vector{UInt8}(lowercase(string(val)))
 
 """
 The IPv4/v6 address type from KATCP
