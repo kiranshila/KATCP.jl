@@ -23,7 +23,9 @@ Additionally, as there are no switchable runtime backends like in rust, we will 
 
 However, like rust, the interface is constructed such that the parser is type-stable and as fast as possible.
 
-See the documentation for more details.
+### Performance
+
+Our parser is about a factor of 4 faster than the python solution (lots of room for improvement).
 
 ### License
 
