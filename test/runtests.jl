@@ -99,8 +99,24 @@ end
             for name in [nothing, "a-command-name"]
                 roundtrip_msg(HelpRequest(name))
             end
+            roundtrip_msg(HelpRequest())
             roundtrip_msg(HelpInform("a-command-name", raw"This is how this command works"))
             roundtrip_msg(HelpReply(KATCP.Ok, 123))
+        end
+        @testset "Restart" begin
+            roundtrip_msg(RestartRequest())
+            roundtrip_msg(RestartReply(KATCP.Ok))
+        end
+        @testset "Watchdog" begin
+            roundtrip_msg(WatchdogRequest())
+            roundtrip_msg(WatchdogReply(KATCP.Ok))
+        end
+        @testset "VersionList" begin
+            roundtrip_msg(VersionListRequest())
+            for identifier = ["abc123nd", nothing]
+                roundtrip_msg(VersionListInform("foo", "v1.2.3", identifier))
+            end
+            roundtrip_msg(VersionListReply(KATCP.Ok, 42))
         end
     end
 end
