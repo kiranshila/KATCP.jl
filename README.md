@@ -25,7 +25,28 @@ However, like rust, the interface is constructed such that the parser is type-st
 
 ### Performance
 
-Our parser is about a factor of 4 faster than the python solution (lots of room for improvement).
+We use a hand-written parser instead of a generated lexer and parser for an order of magnitude (30x) improvement.
+
+#### Python
+```sh
+$ python3 -m timeit -s 'import katcp; parser = katcp.MessageParser()' 'parser.parse(b"?foo[123] bar baz buz_123")'
+50000 loops, best of 5: 8.03 usec per loop
+```
+
+#### Julia
+```julia
+julia> @benchmark RawMessage(b"?foo[123] bar baz buz_123")
+BenchmarkTools.Trial: 10000 samples with 210 evaluations.
+ Range (min … max):  242.205 ns …  24.001 μs  ┊ GC (min … max): 0.00% … 98.26%
+ Time  (median):     365.376 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   396.540 ns ± 786.436 ns  ┊ GC (mean ± σ):  6.86% ±  3.40%
+
+                                    ▆█▇▄▃▂▂▂▁             ▁▂▁   ▂
+  ▃▃▃▃▁▁▁▁▃▁▄▃▅▃▄▃▃▁▁▃▁▁▃▃▃▁▃▃▄▃▄▁▃▆██████████▇▆▅▄▅▁▃▃▄▅▇█████▆ █
+  242 ns        Histogram: log(frequency) by time        452 ns <
+
+ Memory estimate: 272 bytes, allocs estimate: 5.
+```
 
 ### License
 

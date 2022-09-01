@@ -8,7 +8,7 @@ function roundtrip_type(a::T) where {T}
 end
 
 function roundtrip_msg(a::T) where {T}
-    @test a == KATCP.read(T, Vector{UInt8}(RawMessage(a)))
+    @test a == KATCP.read(T, KATCP.serialize(RawMessage(a)))
 end
 
 @testset "KATCP.jl" begin
@@ -17,13 +17,12 @@ end
             name in ["foo", "foo-bar", "foo123"],
             id in [nothing, 123],
             arguments in [
-                [Vector{UInt8}("foo"), Vector{UInt8}("bar"), Vector{UInt8}("baz")],
-                [Vector{UInt8}("foo"), Vector{UInt8}(raw"bar\_is\_silly")],
-                []
+                [b"foo", b"bar", b"baz"],
+                [b"foo", Vector{UInt8}(raw"bar\_is\_silly")],
+                Vector{UInt8}[]
             ]
 
-            msg = RawMessage(kind, name, id, arguments)
-            msg_roundtrip = RawMessage(Vector{UInt8}(msg))
+            msg_roundtrip = RawMessage(KATCP.serialize(RawMessage(kind, name, id, arguments)))
             @test msg_roundtrip.kind == kind
             @test msg_roundtrip.name == name
             @test msg_roundtrip.id == id

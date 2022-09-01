@@ -11,9 +11,9 @@ kind(::Type{<:AbstractKatcpReply}) = Reply
 kind(::Type{<:AbstractKatcpInform}) = Inform
 kind(::Type{<:AbstractKatcpRequest}) = Request
 
-function RawMessage(msg::T; id::Maybe{UInt32}=nothing) where {T<:AbstractKatcpMessage}
+function RawMessage(msg::T; id::Maybe{Integer}=nothing) where {T<:AbstractKatcpMessage}
     fields = fieldnames(T)
-    args = [map(x -> unparse(getproperty(msg, x)), fields)...]
+    args = Vector{UInt8}[map(x -> unparse(getproperty(msg, x)), fields)...]
     RawMessage(kind(T), name(T), id, args)
 end
 
@@ -29,7 +29,7 @@ function read(::Type{T}, msg::RawMessage) where {T<:AbstractKatcpMessage}
     T(args..., fill(nothing, actually_missing)...)
 end
 
-read(::Type{T}, bytes::Vector{UInt8}) where {T} = read(T, RawMessage(bytes))
+read(::Type{T}, bytes::AbstractArray{UInt8}) where {T} = read(T, RawMessage(bytes))
 
 function kebab(string)
     words = lowercase.(split(string, r"(?=[A-Z])"))

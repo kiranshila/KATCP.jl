@@ -15,29 +15,29 @@ parse(t::Type, bytes::Base.CodeUnits) = parse(t, collect(bytes))
 
 ##### KATCP "Primitive" Types
 
-parse(::Type{Int32}, bytes::Vector{UInt8}) = Base.parse(Int32, StringView(bytes))
+parse(::Type{Int32}, bytes::AbstractArray{UInt8}) = Base.parse(Int32, StringView(bytes))
 unparse(val::Int32) = Vector{UInt8}(string(val))
 
-parse(::Type{Int64}, bytes::Vector{UInt8}) = Base.parse(Int64, StringView(bytes))
+parse(::Type{Int64}, bytes::AbstractArray{UInt8}) = Base.parse(Int64, StringView(bytes))
 unparse(val::Int64) = Vector{UInt8}(string(val))
 
-parse(::Type{Float32}, bytes::Vector{UInt8}) = Base.parse(Float32, StringView(bytes))
+parse(::Type{Float32}, bytes::AbstractArray{UInt8}) = Base.parse(Float32, StringView(bytes))
 unparse(val::Float32) = Vector{UInt8}(string(val))
 
-parse(::Type{Float64}, bytes::Vector{UInt8}) = Base.parse(Float64, StringView(bytes))
+parse(::Type{Float64}, bytes::AbstractArray{UInt8}) = Base.parse(Float64, StringView(bytes))
 unparse(val::Float64) = Vector{UInt8}(string(val))
 
-parse(::Type{Bool}, bytes::Vector{UInt8}) = bytes[1] == UInt8('1')
+parse(::Type{Bool}, bytes::AbstractArray{UInt8}) = bytes[1] == UInt8('1')
 unparse(val::Bool) = [val ? UInt8('1') : UInt8('0')]
 
-parse(::Type{DateTime}, bytes::Vector{UInt8}) = unix2datetime(parse(Float64, bytes))
+parse(::Type{DateTime}, bytes::AbstractArray{UInt8}) = unix2datetime(parse(Float64, bytes))
 unparse(val::DateTime) = Vector{UInt8}(string(datetime2unix(val)))
 
 ##### KATCP "Complex" Types
 
 # There is probably a smarter way to do this with a hashing, 
 # but the number of variants is going to be small, so I'm not sure it matters
-function parse(::Type{T}, bytes::Vector{UInt8}) where {T<:Enum}
+function parse(::Type{T}, bytes::AbstractArray{UInt8}) where {T<:Enum}
     sv = StringView(bytes)
     for kind in instances(T)
         if sv == lowercase(string(kind))
@@ -57,7 +57,7 @@ struct KatcpAddress{T<:IPAddr}
     port::Union{UInt16,Nothing}
 end
 
-function parse(::Type{KatcpAddress}, bytes::Vector{UInt8})
+function parse(::Type{KatcpAddress}, bytes::AbstractArray{UInt8})
     sv = StringView(bytes)
     ipv6 = match(r"\[(.*)\](?::(\d+))?", sv)
     ipv4 = match(r"([^:]*)(?::(\d+))?", sv)
@@ -119,15 +119,15 @@ end
 unescape(b::Vector{UInt8}) = Vector{UInt8}(unescape(StringView(b)))
 escape(b::Vector{UInt8}) = Vector{UInt8}(escape(StringView(b)))
 
-parse(::Type{String}, bytes::Vector{UInt8}) = unescape(StringView(bytes))
+parse(::Type{String}, bytes::AbstractArray{UInt8}) = unescape(StringView(bytes))
 unparse(val::String) = escape(Vector{UInt8}(val))
 
-parse(::Type{Vector{UInt8}}, bytes::Vector{UInt8}) = unescape(bytes)
-unparse(val::Vector{UInt8}) = escape(val)
+parse(::Type{<:AbstractArray{UInt8}}, bytes::AbstractArray{UInt8}) = unescape(bytes)
+unparse(val::AbstractArray{UInt8}) = escape(val)
 
 ##### Maybe
 # This will only work is the optional value is the last field or fields, otherwise you need to write a parser
-parse(::Type{Maybe{T}}, bytes::Vector{UInt8}) where {T} = isempty(bytes) ? nothing : parse(T, bytes)
+parse(::Type{Maybe{T}}, bytes::AbstractArray{UInt8}) where {T} = isempty(bytes) ? nothing : parse(T, bytes)
 unparse(::Nothing) = UInt8[]
 
 export KatcpAddress

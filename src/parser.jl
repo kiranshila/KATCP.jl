@@ -10,15 +10,14 @@ end
 
 function isargument(byte::UInt8)
     byte != UInt8(' ') &&
-        byte != UInt8('\t') &&
-        byte != UInt8('\\') &&
-        byte != UInt8('_') &&
         byte != UInt8('\0') &&
         byte != UInt8('\n') &&
-        byte != UInt8('\r')
+        byte != UInt8('\r') &&
+        byte != UInt8('\e') &&
+        byte != UInt8('\t')
 end
 
-function sentinel(bytes::Vector{UInt8})
+function sentinel(bytes::AbstractArray{UInt8})
     ptr = 1
     kind = if bytes[ptr] == UInt8('#')
         Inform
@@ -33,7 +32,7 @@ function sentinel(bytes::Vector{UInt8})
     ptr + 1, kind
 end
 
-function name(bytes::Vector{UInt8}, ptr_start::Integer)
+function name(bytes::AbstractArray{UInt8}, ptr_start::Integer)
     ptr_end = ptr_start
 
     # First match the valid start char
@@ -45,6 +44,9 @@ function name(bytes::Vector{UInt8}, ptr_start::Integer)
 
     # Then keep taking bytes that satisfy the general requirement
     while true
+        if ptr_end > length(bytes)
+            break
+        end
         c = bytes[ptr_end]
         if isalpha(c) || isdigit(c) || c == UInt8('-')
             ptr_end += 1
@@ -57,8 +59,15 @@ function name(bytes::Vector{UInt8}, ptr_start::Integer)
     ptr_end, StringView(@view bytes[ptr_start:ptr_end-1])
 end
 
-function maybe_id(bytes::Vector{UInt8}, ptr_start::Integer)
+# After this point, we might have run out of bytes
+
+function maybe_id(bytes::AbstractArray{UInt8}, ptr_start::Integer)
     ptr_end = ptr_start
+
+    if ptr_start > length(bytes)
+        return ptr_start, StringView(@view bytes[ptr_start-1:ptr_end-2])
+    end
+
     if bytes[ptr_end] == UInt8('[')
         ptr_end += 1
     else
@@ -86,4 +95,51 @@ function maybe_id(bytes::Vector{UInt8}, ptr_start::Integer)
     end
 
     ptr_end, StringView(@view bytes[ptr_start+1:ptr_end-2])
+end
+
+function argument(bytes::AbstractArray{UInt8}, ptr_start::Integer)
+    ptr_end = ptr_start
+    arg_start = 0
+
+    if ptr_start > length(bytes)
+        return ptr_start, StringView(@view bytes[ptr_start-1:ptr_end-2])
+    end
+
+    # Take whitespace until argument char
+    while true
+        c = bytes[ptr_end]
+        if c == UInt8(' ') || c == UInt8('\t')
+            ptr_end += 1
+        elseif isargument(c)
+            arg_start = ptr_end
+            ptr_end += 1
+            break
+        else
+            return error("Invalid argument character - $(Char(c))")
+        end
+    end
+
+    while true
+        if ptr_end > length(bytes)
+            break
+        end
+        c = bytes[ptr_end]
+        if isargument(c)
+            ptr_end += 1
+        else
+            break
+        end
+    end
+
+    ptr_end, @view bytes[arg_start:ptr_end-1]
+end
+
+function arguments(bytes::AbstractArray{UInt8}, ptr_start::Integer)
+    args = SubArray{UInt8}[]
+    ptr_end = ptr_start
+    while ptr_end < length(bytes)
+        ptr_end, arg = argument(bytes, ptr_end)
+        push!(args, arg)
+    end
+    args
 end
