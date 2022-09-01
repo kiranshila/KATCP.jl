@@ -14,6 +14,7 @@ kind(::Type{<:AbstractKatcpRequest}) = Request
 function RawMessage(msg::T; id::Maybe{Integer}=nothing) where {T<:AbstractKatcpMessage}
     fields = fieldnames(T)
     args = Vector{UInt8}[map(x -> unparse(getproperty(msg, x)), fields)...]
+    filter!(x -> !isempty(x), args)
     RawMessage(kind(T), name(T), id, args)
 end
 

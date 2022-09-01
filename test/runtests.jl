@@ -118,5 +118,19 @@ end
             end
             roundtrip_msg(VersionListReply(KATCP.Ok, 42))
         end
+        @testset "Disconnect" begin
+            roundtrip_msg(DisconnectInform("New client connected from 192.168.1.100:24500"))
+        end
+        @testset "VersionConnect" begin
+            roundtrip_msg(VersionConnectInform("katcp-protocol", "5.0-MITB"))
+            roundtrip_msg(VersionConnectInform("katcp-library", "KATCP.jl-0.1.0", "Julia 1.8 - x86_64-linux-gnu"))
+        end
+        @testset "InterfaceChanged" begin
+            roundtrip_msg(InterfaceChangedInform("sensor-list"))
+            roundtrip_msg(InterfaceChangedInform("request-list"))
+            roundtrip_msg(InterfaceChangedInform("sensor", "az", KATCP.Added))
+            roundtrip_msg(InterfaceChangedInform("request", "el", KATCP.Modified))
+            roundtrip_msg(InterfaceChangedInform("request", "el", KATCP.Removed))
+        end
     end
 end

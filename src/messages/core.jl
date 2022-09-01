@@ -101,7 +101,43 @@ struct VersionListReply <: AbstractKatcpReply
     num_informs::Int64
 end
 
-### Async Informs
+######## Async Informs
+
+"""
+Sent to the client by the device shortly before the client is disconnected. In the case where a client is being
+disconnected because a new client has connected, the message
+should include the IP number and port of the new client for tracking purposes.
+"""
+struct DisconnectInform <: AbstractKatcpInform
+    message::String
+end
+
+"""
+Sent to the client when it connects. These inform messages use the same argument format as `VersionListInform`
+and all roles and components declared via `VersionConnectInform` should be included in the informs sent in
+response to `VersionListRequest`.
+"""
+struct VersionConnectInform <: AbstractKatcpInform
+    name::String
+    version::String
+    identifier::Maybe{String}
+end
+
+VersionConnectInform(name, version) = VersionConnectInform(name, version, nothing)
+
+"""
+Only required for dynamic devices, i.e. devices that may change their katcp interface during a connection.
+Sent to the client by the device to indicate that the katcp interface has changed. Passing no arguments
+with the inform implies that the whole katcp interface may have changed. The optional parameters allow
+more fine grained specification of what changed
+"""
+struct InterfaceChangedInform <: AbstractKatcpInform
+    object::String
+    name::Maybe{String}
+    change::Maybe{ChangeSpecification}
+end
+
+InterfaceChangedInform(object) = InterfaceChangedInform(object, nothing, nothing)
 
 export HaltRequest,
     HaltReply,
@@ -114,4 +150,7 @@ export HaltRequest,
     WatchdogReply,
     VersionListRequest,
     VersionListInform,
-    VersionListReply
+    VersionListReply,
+    DisconnectInform,
+    VersionConnectInform,
+    InterfaceChangedInform

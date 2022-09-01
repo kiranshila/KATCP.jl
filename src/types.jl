@@ -12,6 +12,7 @@ parse(t::Type, bytes::Base.CodeUnits) = parse(t, collect(bytes))
 ##### KATCP Enum Types
 
 @enum RetCode Ok Invalid Fail
+@enum ChangeSpecification Added Removed Modified
 
 ##### KATCP "Primitive" Types
 
@@ -40,14 +41,14 @@ unparse(val::DateTime) = Vector{UInt8}(string(datetime2unix(val)))
 function parse(::Type{T}, bytes::AbstractArray{UInt8}) where {T<:Enum}
     sv = StringView(bytes)
     for kind in instances(T)
-        if sv == lowercase(string(kind))
+        if sv == kebab(string(kind))
             return kind
         end
     end
     error("Discrete variant in payload, $sv, doesn't match a variant in $T")
 end
 
-unparse(val::Enum) = Vector{UInt8}(lowercase(string(val)))
+unparse(val::Enum) = Vector{UInt8}(kebab(string(val)))
 
 """
 The IPv4/v6 address type from KATCP
