@@ -11,7 +11,7 @@ read(t::Type{T}, raw::Vector{UInt8}) where {T} = read(t, RawMessage(raw))
 
 function RawMessage(kind::MessageKind, name::String, msg::T; id::Union{UInt32,Nothing}=nothing) where {T<:AbstractKatcpMessage}
     fields = fieldnames(T)
-    args = [map(x -> Vector{UInt8}(getproperty(msg, x)), fields)...]
+    args = [map(x -> unparse(getproperty(msg, x)), fields)...]
     RawMessage(kind, name, id, args)
 end
 

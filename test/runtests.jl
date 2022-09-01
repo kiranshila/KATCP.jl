@@ -3,6 +3,10 @@ using Test
 using Dates
 using Sockets
 
+function roundtrip_type(a::T) where {T}
+    @test a == KATCP.parse(T, KATCP.unparse(a))
+end
+
 @testset "KATCP.jl" begin
     @testset "Round trip protocol" begin
         for kind in [KATCP.Request, KATCP.Inform, KATCP.Reply],
@@ -25,34 +29,37 @@ using Sockets
     @testset "Round trip types" begin
         @testset "RetCode" begin
             for code in [KATCP.Ok, KATCP.Invalid, KATCP.Fail]
-                code_roundtrip = KATCP.parse(KATCP.RetCode, Vector{UInt8}(code))
-                @test code_roundtrip == code
+                roundtrip_type(code)
             end
         end
         @testset "Int32" begin
             for val in rand(Int32, 100)
-                @test val == KATCP.parse(Int32, Vector{UInt8}(val))
+                roundtrip_type(val)
             end
         end
         @testset "Float32" begin
             for val in rand(Float32, 100)
-                @test val == KATCP.parse(Float32, Vector{UInt8}(val))
+                roundtrip_type(val)
+            end
+        end
+        @testset "Float64" begin
+            for val in rand(Float32, 100)
+                roundtrip_type(val)
             end
         end
         @testset "Bool" begin
-            @test true == KATCP.parse(Bool, Vector{UInt8}(true))
-            @test false == KATCP.parse(Bool, Vector{UInt8}(false))
+            roundtrip_type(true)
+            roundtrip_type(false)
         end
         @testset "DateTime" begin
             for timestamp in rand(100) .* 31536000
-                dt = unix2datetime(timestamp)
-                KATCP.parse(DateTime, Vector{UInt8}(dt))
+                roundtrip_type(unix2datetime(timestamp))
             end
         end
         @testset "Enums" begin
             @enum Foo Bar Baz Buzz
             for variant in [Bar, Baz, Buzz]
-                @test variant == KATCP.parse(Foo, Vector{UInt8}(variant))
+                roundtrip_type(variant)
             end
         end
         @testset "KatcpAddress" begin
@@ -60,7 +67,7 @@ using Sockets
                 port in [UInt16(8080), nothing]
 
                 addr = KatcpAddress(host, port)
-                @test addr == KATCP.parse(KatcpAddress, Vector{UInt8}(addr))
+                @test addr == KATCP.parse(KatcpAddress, KATCP.unparse(addr))
             end
         end
     end
