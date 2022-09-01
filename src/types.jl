@@ -1,7 +1,7 @@
 """The types we can serde with KATCP and implementations of the serde.
 
 parse(::Type{T}, bytes) - create a KATCP type `T` from `bytes`
-Vector{UInt8}(val::T) - create a byte vector from KATCP value `val` of KATCP type `T`
+unparse(val::T) - create a byte vector from KATCP value `val` of KATCP type `T`
 """
 
 using Sockets, Dates
