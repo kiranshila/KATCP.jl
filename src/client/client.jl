@@ -15,7 +15,7 @@ end
 """
 Construct and connect to a `KatcpClient`
 """
-function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function}=Dict())
+function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function}=Dict{String,Function}())
     # Connect to the TCP socket
     con = connect(addr, port)
 
