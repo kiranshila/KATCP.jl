@@ -6,9 +6,6 @@ unparse(val::T) - create a byte vector from KATCP value `val` of KATCP type `T`
 
 using Sockets, Dates
 
-"""Fallback method for parse if we came from a "safe" string"""
-parse(t::Type, bytes::Base.CodeUnits) = parse(t, collect(bytes))
-
 ##### KATCP Enum Types
 
 @enum RetCode Ok Invalid Fail
@@ -127,8 +124,8 @@ parse(::Type{<:AbstractArray{UInt8}}, bytes::AbstractArray{UInt8}) = unescape(by
 unparse(val::AbstractArray{UInt8}) = escape(val)
 
 ##### Maybe
-# This will only work is the optional value is the last field or fields, otherwise you need to write a parser
-parse(::Type{Maybe{T}}, bytes::AbstractArray{UInt8}) where {T} = isempty(bytes) ? nothing : parse(T, bytes)
+parse(::Type{Maybe{T}}, bytes::AbstractArray{UInt8}) where {T} = isempty(bytes) ? nothing : Some(parse(T, bytes))
+unparse(val::Some) = unparse(something(val))
 unparse(::Nothing) = UInt8[]
 
 export KatcpAddress

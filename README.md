@@ -4,6 +4,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://kiranshila.github.io/KATCP.jl/dev/)
 [![Build Status](https://github.com/kiranshila/KATCP.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/kiranshila/KATCP.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/kiranshila/KATCP.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/kiranshila/KATCP.jl)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 This library provides a pure Julia implementation of the [KATCP](https://katcp-python.readthedocs.io/en/latest/_downloads/361189acb383a294be20d6c10c257cb4/NRF-KAT7-6.0-IFCE-002-Rev5-1.pdf)
 monitor and control protocol, as described by the Karoo Array Telescope (KAT) project from the Square Kilometer Array (SKA) South Africa group.

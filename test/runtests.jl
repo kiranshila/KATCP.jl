@@ -2,6 +2,7 @@ using KATCP
 using Test
 using Dates
 using Sockets
+using Aqua
 
 function roundtrip_type(a::T) where {T}
     @test a == KATCP.parse(T, KATCP.unparse(a))
@@ -11,11 +12,22 @@ function roundtrip_msg(a::T) where {T}
     @test a == KATCP.read(T, KATCP.serialize(RawMessage(a)))
 end
 
+@testset "Aqua" begin
+    Aqua.test_ambiguities(KATCP)
+    # I don't think this is actually an error
+    # Aqua.test_ubnound_args(KATCP)
+    Aqua.test_undefined_exports(KATCP)
+    Aqua.test_project_extras(KATCP)
+    Aqua.test_stale_deps(KATCP)
+    Aqua.test_deps_compat(KATCP)
+    Aqua.test_project_toml_formatting(KATCP)
+end
+
 @testset "KATCP.jl" begin
     @testset "Round trip protocol" begin
         for kind in [KATCP.Request, KATCP.Inform, KATCP.Reply],
             name in ["foo", "foo-bar", "foo123"],
-            id in [nothing, 123],
+            id in [nothing, Some(123)],
             arguments in [
                 [b"foo", b"bar", b"baz"],
                 [b"foo", Vector{UInt8}(raw"bar\_is\_silly")],
@@ -84,7 +96,7 @@ end
             end
         end
         @testset "Maybe" begin
-            @test "Foo" == KATCP.parse(KATCP.Maybe{String}, KATCP.unparse("Foo"))
+            @test Some("Foo") == KATCP.parse(KATCP.Maybe{String}, KATCP.unparse("Foo"))
             @test nothing === KATCP.parse(KATCP.Maybe{String}, KATCP.unparse(nothing))
         end
     end
@@ -96,7 +108,7 @@ end
             end
         end
         @testset "Help" begin
-            for name in [nothing, "a-command-name"]
+            for name in [nothing, Some("a-command-name")]
                 roundtrip_msg(HelpRequest(name))
             end
             roundtrip_msg(HelpRequest())
@@ -113,7 +125,7 @@ end
         end
         @testset "VersionList" begin
             roundtrip_msg(VersionListRequest())
-            for identifier = ["abc123nd", nothing]
+            for identifier = [Some("abc123nd"), nothing]
                 roundtrip_msg(VersionListInform("foo", "v1.2.3", identifier))
             end
             roundtrip_msg(VersionListReply(KATCP.Ok, 42))

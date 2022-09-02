@@ -30,6 +30,7 @@ struct HelpRequest <: AbstractKatcpRequest
 end
 
 HelpRequest() = HelpRequest(nothing)
+HelpRequest(s::String) = HelpRequest(Some(s))
 
 """
 Although the description is not intended to be machine readable, the preferred convention for describing
@@ -95,6 +96,7 @@ struct VersionListInform <: AbstractKatcpInform
 end
 
 VersionListInform(name, version) = VersionListInform(name, version, nothing)
+VersionListInform(name, version, identifier::String) = VersionListInform(name, version, Some(identifier))
 
 struct VersionListReply <: AbstractKatcpReply
     ret_code::RetCode
@@ -124,6 +126,7 @@ struct VersionConnectInform <: AbstractKatcpInform
 end
 
 VersionConnectInform(name, version) = VersionConnectInform(name, version, nothing)
+VersionConnectInform(name, version, identifier::String) = VersionConnectInform(name, version, Some(identifier))
 
 """
 Only required for dynamic devices, i.e. devices that may change their katcp interface during a connection.
@@ -138,6 +141,7 @@ struct InterfaceChangedInform <: AbstractKatcpInform
 end
 
 InterfaceChangedInform(object) = InterfaceChangedInform(object, nothing, nothing)
+InterfaceChangedInform(object, name::String, change::ChangeSpecification) = InterfaceChangedInform(object, Some(name), Some(change))
 
 export HaltRequest,
     HaltReply,

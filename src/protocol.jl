@@ -11,17 +11,18 @@ struct RawMessage{T1,T2,T3}
     id::Maybe{T2}
     arguments::Vector{T3}
     # Default constructor
-    function RawMessage(kind::MessageKind, name::T1, id::T2, argument::Vector{T3}) where {T1<:AbstractString,T2<:Integer,T3<:AbstractArray{UInt8}}
-        new{T1,T2,T3}(kind, name, id, argument)
+    function RawMessage(kind::MessageKind, name::T1, id::Some{T2}, arguments::Vector{T3}) where {T1<:AbstractString,T2<:Integer,T3<:AbstractArray{UInt8}}
+        new{T1,T2,T3}(kind, name, id, arguments)
     end
     # Fallback ID type for no ID
-    function RawMessage(kind::MessageKind, name::T1, id::T2, argument::Vector{T3}) where {T1<:AbstractString,T2<:Nothing,T3<:AbstractArray{UInt8}}
-        new{T1,Int64,T3}(kind, name, id, argument)
+    function RawMessage(kind::MessageKind, name::T1, id::T2, arguments::Vector{T3}) where {T1<:AbstractString,T2<:Nothing,T3<:AbstractArray{UInt8}}
+        new{T1,Int64,T3}(kind, name, id, arguments)
     end
 end
 
 # fallback constructors for when there isn't enough information to fully type RawMessage
 RawMessage(kind::MessageKind, name::AbstractString, id::Maybe{Integer}) = RawMessage(kind, name, id, Vector{UInt8}[])
+RawMessage(kind::MessageKind, name::AbstractString, id::Integer, arguments::Vector) = RawMessage(kind, name, Some(id), arguments)
 
 """
 Parse an incoming vector of bytes (without trailing newline) into a `RawMessage`.
@@ -36,7 +37,7 @@ function RawMessage(bytes::AbstractArray{UInt8})
     id_parsed = if isempty(id)
         nothing
     else
-        Base.parse(Int64, id)
+        Some(Base.parse(Int64, id))
     end
 
     RawMessage(kind, n, id_parsed, args)
@@ -63,7 +64,7 @@ function serialize(message::RawMessage)
     # Maybe ID
     if !isnothing(message.id)
         push!(payload, UInt8('['))
-        append!(payload, Vector{UInt8}(string(message.id)))
+        append!(payload, Vector{UInt8}(string(something(message.id))))
         push!(payload, UInt8(']'))
     end
 
