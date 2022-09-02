@@ -36,7 +36,7 @@ $ python3 -m timeit -s 'import katcp; parser = katcp.MessageParser()' 'parser.pa
 
 #### Julia
 ```julia
-julia> @benchmark RawMessage(b"?foo[123] bar baz buz_123")
+julia> @benchmark KatcpMessage(b"?foo[123] bar baz buz_123")
 BenchmarkTools.Trial: 10000 samples with 210 evaluations.
  Range (min … max):  242.205 ns …  24.001 μs  ┊ GC (min … max): 0.00% … 98.26%
  Time  (median):     365.376 ns               ┊ GC (median):    0.00%

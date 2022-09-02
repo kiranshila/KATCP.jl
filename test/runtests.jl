@@ -8,8 +8,16 @@ function roundtrip_type(a::T) where {T}
     @test a == KATCP.parse(T, KATCP.unparse(a))
 end
 
-function roundtrip_msg(a::T) where {T}
-    @test a == KATCP.read(T, KATCP.serialize(RawMessage(a)))
+function roundtrip_msg(a::T) where {T<:KATCP.AbstractKatcpMessage}
+    @test a == KATCP.read(T, KATCP.serialize(KatcpMessage(a)))
+end
+
+function roundtrip_msg(msg::KatcpMessage)
+    msg_roundtrip = KatcpMessage(KATCP.serialize(msg))
+    @test msg_roundtrip.kind == msg.kind
+    @test msg_roundtrip.name == msg.name
+    @test msg_roundtrip.id == msg.id
+    @test msg_roundtrip.arguments == msg.arguments
 end
 
 @testset "Aqua" begin
@@ -34,11 +42,7 @@ end
                 Vector{UInt8}[]
             ]
 
-            msg_roundtrip = RawMessage(KATCP.serialize(RawMessage(kind, name, id, arguments)))
-            @test msg_roundtrip.kind == kind
-            @test msg_roundtrip.name == name
-            @test msg_roundtrip.id == id
-            @test msg_roundtrip.arguments == arguments
+            roundtrip_msg(KatcpMessage(kind, name, id, arguments))
         end
     end
     @testset "Round trip types" begin
@@ -101,11 +105,13 @@ end
         end
     end
     @testset "Roundtrip messages" begin
+        @testset "Replies" begin
+            for code in [KATCP.Ok, KATCP.Fail, KATCP.Invalid], id in [nothing, 123]
+                roundtrip_msg(reply(code, "a-command-name"; id=id))
+            end
+        end
         @testset "Halt" begin
             roundtrip_msg(HaltRequest())
-            for code in [KATCP.Ok, KATCP.Invalid, KATCP.Fail]
-                roundtrip_msg(HaltReply(code))
-            end
         end
         @testset "Help" begin
             for name in [nothing, Some("a-command-name")]
@@ -113,22 +119,20 @@ end
             end
             roundtrip_msg(HelpRequest())
             roundtrip_msg(HelpInform("a-command-name", raw"This is how this command works"))
-            roundtrip_msg(HelpReply(KATCP.Ok, 123))
+            roundtrip_msg(reply(KATCP.Ok, HelpReply(123)))
         end
         @testset "Restart" begin
             roundtrip_msg(RestartRequest())
-            roundtrip_msg(RestartReply(KATCP.Ok))
         end
         @testset "Watchdog" begin
             roundtrip_msg(WatchdogRequest())
-            roundtrip_msg(WatchdogReply(KATCP.Ok))
         end
         @testset "VersionList" begin
             roundtrip_msg(VersionListRequest())
             for identifier = [Some("abc123nd"), nothing]
                 roundtrip_msg(VersionListInform("foo", "v1.2.3", identifier))
             end
-            roundtrip_msg(VersionListReply(KATCP.Ok, 42))
+            roundtrip_msg(reply(KATCP.Ok, VersionListReply(123)))
         end
         @testset "Disconnect" begin
             roundtrip_msg(DisconnectInform("New client connected from 192.168.1.100:24500"))

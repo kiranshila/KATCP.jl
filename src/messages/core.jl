@@ -8,13 +8,6 @@ software and hardware into a state where it is safe to power down.
 """
 struct HaltRequest <: AbstractKatcpRequest end
 
-"""
-This reply is sent just before the halt occurs.
-"""
-struct HaltReply <: AbstractKatcpReply
-    ret_code::RetCode
-end
-
 ### Help
 
 """
@@ -34,8 +27,8 @@ HelpRequest(s::String) = HelpRequest(Some(s))
 
 """
 Although the description is not intended to be machine readable, the preferred convention for describing
-the parameters and return values is to use a syntax like that seen on the right-hand side of a BNF produc-
-tion (as commonly seen in the usage strings of UNIX command-line utilities and the synopsis sections
+the parameters and return values is to use a syntax like that seen on the right-hand side of a BNF production
+(as commonly seen in the usage strings of UNIX command-line utilities and the synopsis sections
 of man pages).
 """
 struct HelpInform <: AbstractKatcpInform
@@ -44,7 +37,6 @@ struct HelpInform <: AbstractKatcpInform
 end
 
 struct HelpReply <: AbstractKatcpReply
-    ret_code::RetCode
     num_commands::Int64
 end
 
@@ -58,13 +50,6 @@ the connection to the current client is closed.
 """
 struct RestartRequest <: AbstractKatcpRequest end
 
-"""
-This reply is sent just before the restart occurs.
-"""
-struct RestartReply <: AbstractKatcpReply
-    ret_code::RetCode
-end
-
 ### Watchdog
 
 """
@@ -72,13 +57,6 @@ This  may be sent by the client occasionally to check that the connection to the
 device is still active. The device should respond with a success reply if it receives the watchdog request.
 """
 struct WatchdogRequest <: AbstractKatcpRequest end
-
-"""
-This reply is sent in response to a `WatchdogRequest`
-"""
-struct WatchdogReply <: AbstractKatcpReply
-    ret_code::RetCode
-end
 
 ### VersionList
 
@@ -99,7 +77,6 @@ VersionListInform(name, version) = VersionListInform(name, version, nothing)
 VersionListInform(name, version, identifier::String) = VersionListInform(name, version, Some(identifier))
 
 struct VersionListReply <: AbstractKatcpReply
-    ret_code::RetCode
     num_informs::Int64
 end
 
@@ -144,14 +121,11 @@ InterfaceChangedInform(object) = InterfaceChangedInform(object, nothing, nothing
 InterfaceChangedInform(object, name::String, change::ChangeSpecification) = InterfaceChangedInform(object, Some(name), Some(change))
 
 export HaltRequest,
-    HaltReply,
     HelpRequest,
     HelpInform,
     HelpReply,
     RestartRequest,
-    RestartReply,
     WatchdogRequest,
-    WatchdogReply,
     VersionListRequest,
     VersionListInform,
     VersionListReply,

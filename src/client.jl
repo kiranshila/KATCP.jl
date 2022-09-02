@@ -2,19 +2,22 @@
 module Client
 
 using Sockets
-import KATCP: RawMessage, AbstractKatcpMessage, AbstractKatcpRequest, Maybe, serialize
+import KATCP: KatcpMessage, AbstractKatcpMessage, AbstractKatcpRequest, Maybe, serialize
 
 struct KatcpClient
     connection::TCPSocket
-    msgs::Channel{RawMessage}
+    msgs::Channel{KatcpMessage}
 end
 
+"""
+Construct and connect to a `KatcpClient`
+"""
 function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function})
     # Connect to the TCP socket
     con = connect(addr, port)
 
     # Create the "unhandled message" channel
-    chan = Channel{RawMessage}()
+    chan = Channel{KatcpMessage}()
 
     # Add our default handlers
     @async begin
@@ -22,7 +25,7 @@ function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function
             line = readline(con)
             if !isempty(line)
                 # Parse
-                msg = RawMessage(Base.CodeUnits(line))
+                msg = KatcpMessage(Base.CodeUnits(line))
                 if haskey(handlers, msg.name)
                     # Handle
                     handlers[msg.name](msg)
@@ -37,9 +40,12 @@ function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function
     KatcpClient(con, chan)
 end
 
+"""
+Send an `AbstractKatcpMessage` to the connected `KacpClient`
+"""
 function transmit(msg::AbstractKatcpMessage, client::KatcpClient; id::Maybe{Integer}=nothing)
     # Create a raw message from the msg
-    raw = RawMessage(msg; id)
+    raw = KatcpMessage(msg; id)
     # Serialize and send
     write(client.connection, serialize(raw))
     write(client.connection, '\n')

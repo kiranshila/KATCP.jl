@@ -5,29 +5,29 @@ using StringViews
 """
 The core message type of KATCP.
 """
-struct RawMessage{T1,T2,T3}
+struct KatcpMessage{T1,T2,T3}
     kind::MessageKind
     name::T1
     id::Maybe{T2}
     arguments::Vector{T3}
     # Default constructor
-    function RawMessage(kind::MessageKind, name::T1, id::Some{T2}, arguments::Vector{T3}) where {T1<:AbstractString,T2<:Integer,T3<:AbstractArray{UInt8}}
+    function KatcpMessage(kind::MessageKind, name::T1, id::Some{T2}, arguments::Vector{T3}) where {T1<:AbstractString,T2<:Integer,T3<:AbstractArray{UInt8}}
         new{T1,T2,T3}(kind, name, id, arguments)
     end
     # Fallback ID type for no ID
-    function RawMessage(kind::MessageKind, name::T1, id::T2, arguments::Vector{T3}) where {T1<:AbstractString,T2<:Nothing,T3<:AbstractArray{UInt8}}
+    function KatcpMessage(kind::MessageKind, name::T1, id::T2, arguments::Vector{T3}) where {T1<:AbstractString,T2<:Nothing,T3<:AbstractArray{UInt8}}
         new{T1,Int64,T3}(kind, name, id, arguments)
     end
 end
 
-# fallback constructors for when there isn't enough information to fully type RawMessage
-RawMessage(kind::MessageKind, name::AbstractString, id::Maybe{Integer}) = RawMessage(kind, name, id, Vector{UInt8}[])
-RawMessage(kind::MessageKind, name::AbstractString, id::Integer, arguments::Vector) = RawMessage(kind, name, Some(id), arguments)
+# fallback constructors for when there isn't enough information to fully type KatcpMessage
+KatcpMessage(kind::MessageKind, name::AbstractString, id::Maybe{Integer}) = KatcpMessage(kind, name, id, Vector{UInt8}[])
+KatcpMessage(kind::MessageKind, name::AbstractString, id::Integer, arguments::Vector) = KatcpMessage(kind, name, Some(id), arguments)
 
 """
-Parse an incoming vector of bytes (without trailing newline) into a `RawMessage`.
+Parse an incoming vector of bytes (without trailing newline) into a `KatcpMessage`.
 """
-function RawMessage(bytes::AbstractArray{UInt8})
+function KatcpMessage(bytes::AbstractArray{UInt8})
     ptr, kind = sentinel(bytes)
     ptr, n = name(bytes, ptr)
     ptr, id = maybe_id(bytes, ptr)
@@ -40,13 +40,13 @@ function RawMessage(bytes::AbstractArray{UInt8})
         Some(Base.parse(Int64, id))
     end
 
-    RawMessage(kind, n, id_parsed, args)
+    KatcpMessage(kind, n, id_parsed, args)
 end
 
 """
-Serialize a `RawMessage` into a vector of bytes (without trailing newline)
+Serialize a `KatcpMessage` into a vector of bytes (without trailing newline)
 """
-function serialize(message::RawMessage)
+function serialize(message::KatcpMessage)
     payload = UInt8[]
 
     # Kind sentinel
@@ -77,4 +77,4 @@ function serialize(message::RawMessage)
     payload
 end
 
-export RawMessage
+export KatcpMessage
