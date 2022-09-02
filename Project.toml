@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 StringViews = "354b36f9-a18e-4713-926e-db85100087ba"
 

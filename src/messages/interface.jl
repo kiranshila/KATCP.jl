@@ -86,4 +86,4 @@ function reply(ret_code::RetCode, body::T; id=nothing) where {T<:AbstractKatcpMe
     KatcpMessage(Reply, name(T), id, [unparse(ret_code), materialize(body)...])
 end
 
-export AbstractKatcpReply, AbstractKatcpInform, AbstractKatcpRequest, ret_code, reply
+export AbstractKatcpMessage, AbstractKatcpReply, AbstractKatcpInform, AbstractKatcpRequest, ret_code, reply

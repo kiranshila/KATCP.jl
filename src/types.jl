@@ -114,8 +114,8 @@ function escape(s::AbstractString)
     end
 end
 
-unescape(b::Vector{UInt8}) = Vector{UInt8}(unescape(StringView(b)))
-escape(b::Vector{UInt8}) = Vector{UInt8}(escape(StringView(b)))
+unescape(b::AbstractArray{UInt8}) = Vector{UInt8}(unescape(StringView(b)))
+escape(b::AbstractArray{UInt8}) = Vector{UInt8}(escape(StringView(b)))
 
 parse(::Type{String}, bytes::AbstractArray{UInt8}) = unescape(StringView(bytes))
 unparse(val::String) = escape(Vector{UInt8}(val))

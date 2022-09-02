@@ -3,6 +3,9 @@ module Client
 
 using Sockets
 using KATCP
+import KATCP: Maybe, serialize
+
+include("handlers.jl")
 
 struct KatcpClient
     connection::TCPSocket
@@ -12,12 +15,15 @@ end
 """
 Construct and connect to a `KatcpClient`
 """
-function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function})
+function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function}=Dict())
     # Connect to the TCP socket
     con = connect(addr, port)
 
     # Create the "unhandled message" channel
     chan = Channel{KatcpMessage}()
+
+    # Merge external handlers
+    combined_handlers = merge(DEFAULT_HANDLERS, handlers)
 
     # Add our default handlers
     @async begin
@@ -26,9 +32,9 @@ function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function
             if !isempty(line)
                 # Parse
                 msg = KatcpMessage(Base.CodeUnits(line))
-                if haskey(handlers, msg.name)
+                if haskey(combined_handlers, msg.name)
                     # Handle
-                    handlers[msg.name](msg)
+                    combined_handlers[msg.name](msg)
                 else
                     # Push
                     put!(chan, msg)
@@ -62,7 +68,7 @@ function request_informs_until_reply(msg::AbstractKatcpRequest, client::KatcpCli
         if last_msg.kind == KATCP.Reply
             break
         elseif last_msg.kind == KATCP.Inform
-            @assert last_msg.name == KATCP.name(typeof(msg)) "We recieved an inform message that didn't match the name of the request"
+            @assert last_msg.name == KATCP.name(typeof(msg)) "We recieved an inform message that didn't match the name of the request - $(last_msg.name)"
             push!(informs, last_msg)
         elseif last_msg.kind == KATCP.Request
             return error("Got a request message as a response during a request cycle")
@@ -93,6 +99,14 @@ function request(msg::AbstractKatcpRequest, client::KatcpClient, inform_type::Ty
 end
 
 """
+Perform a KATCP request given the concrete request `msg` and collect concrete reply `reply_type`
+"""
+function request(msg::AbstractKatcpRequest, client::KatcpClient, reply_type::Type{<:AbstractKatcpReply}; id::Maybe{Integer}=nothing)
+    ret, informs = request_informs_until_reply(msg, client; id=id)
+    (ret_code(ret), KATCP.read(reply_type, ret), informs)
+end
+
+"""
 Perform a KATCP request given the concrete request `msg` and collect into concrete inform messages `inform_type` and concrete reply `reply_type`
 """
 function request(
@@ -102,7 +116,7 @@ function request(
     reply_type::Type{<:AbstractKatcpReply}; id::Maybe{Integer}=nothing)
     ret, informs = request_informs_until_reply(msg, client; id=id)
     xform(msg) = KATCP.read(inform_type, msg)
-    (KATCP.read(reply_type, ret), xform.(informs))
+    (ret_code(ret), KATCP.read(reply_type, ret), xform.(informs))
 end
 
 export KatcpClient, transmit, request
