@@ -9,4 +9,6 @@ include("types.jl")
 include("messages/interface.jl")
 include("messages/core.jl")
 
+include("client.jl")
+
 end
