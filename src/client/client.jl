@@ -29,11 +29,14 @@ function KatcpClient(addr::IPAddr, port::Integer; handlers::Dict{String,Function
     @async begin
         @async while isopen(con)
             line = readline(con)
+            @trace "New incoming line" line = line
             if !isempty(line)
                 # Parse
                 msg = KatcpMessage(Base.CodeUnits(line))
+                @trace "Message parsed" msg = msg
                 if haskey(combined_handlers, msg.name)
                     # Handle
+                    @trace "Message matched handler" name = msg.name
                     combined_handlers[msg.name](msg)
                 else
                     # Push
