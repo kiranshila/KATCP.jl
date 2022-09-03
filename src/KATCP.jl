@@ -10,6 +10,8 @@ include("types.jl")
 include("messages/interface.jl")
 include("messages/core.jl")
 include("messages/log.jl")
+include("messages/multi_client.jl")
+include("messages/deprecated.jl")
 
 include("client/client.jl")
 
